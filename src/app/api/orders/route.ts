@@ -107,8 +107,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ orderId: order.id })
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    console.error('[orders] unhandled error:', message)
-    return NextResponse.json({ error: 'Error interno del servidor', detail: message }, { status: 500 })
+    const detail = err instanceof Error
+      ? err.message
+      : typeof err === 'object'
+        ? JSON.stringify(err)
+        : String(err)
+    console.error('[orders] unhandled error:', detail)
+    return NextResponse.json({ error: 'Error interno del servidor', detail }, { status: 500 })
   }
 }

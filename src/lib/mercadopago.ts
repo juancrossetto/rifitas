@@ -22,7 +22,11 @@ export async function createPreference({
   quantity: number
   buyerEmail: string
 }) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rifar.vercel.app'
+  // MercadoPago rechaza URLs de localhost — siempre usar la URL pública de producción
+  const rawUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+  const baseUrl = rawUrl.startsWith('http://localhost') || rawUrl === ''
+    ? 'https://rifar.vercel.app'
+    : rawUrl
 
   return mpPreference.create({
     body: {
