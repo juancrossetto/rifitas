@@ -44,6 +44,10 @@ export function BuyForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (selectedNumbers.length === 0) return
+    if (!buyerEmail && !buyerPhone) {
+      setError('Ingresá al menos un email o teléfono.')
+      return
+    }
     setLoading(true)
     setError(null)
 
@@ -183,13 +187,36 @@ export function BuyForm({
               <input className="input" required value={buyerName} onChange={(e) => setBuyerName(e.target.value)} placeholder="Juan García" />
             </div>
             <div>
-              <label className="label">Email *</label>
-              <input className="input" type="email" required value={buyerEmail} onChange={(e) => setBuyerEmail(e.target.value)} placeholder="juan@email.com" />
+              <label className="label">
+                Email
+                <span className="text-on-surface-variant font-normal ml-1 text-xs">(o teléfono)</span>
+              </label>
+              <input
+                className="input"
+                type="email"
+                value={buyerEmail}
+                onChange={(e) => setBuyerEmail(e.target.value)}
+                placeholder="juan@email.com"
+              />
             </div>
             <div>
-              <label className="label">Teléfono *</label>
-              <input className="input" type="tel" required value={buyerPhone} onChange={(e) => setBuyerPhone(e.target.value)} placeholder="1122334455" />
+              <label className="label">
+                Teléfono
+                <span className="text-on-surface-variant font-normal ml-1 text-xs">(o email)</span>
+              </label>
+              <input
+                className="input"
+                type="tel"
+                value={buyerPhone}
+                onChange={(e) => setBuyerPhone(e.target.value)}
+                placeholder="1122334455"
+              />
             </div>
+            {!buyerEmail && !buyerPhone && (
+              <p className="sm:col-span-2 text-xs text-error -mt-2">
+                Ingresá al menos un email o teléfono para poder contactarte.
+              </p>
+            )}
           </div>
 
           {/* Método de pago */}

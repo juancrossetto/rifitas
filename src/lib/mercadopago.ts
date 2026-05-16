@@ -22,7 +22,7 @@ export async function createPreference({
   quantity: number
   buyerEmail: string
 }) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://rifar.vercel.app'
 
   return mpPreference.create({
     body: {

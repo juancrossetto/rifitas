@@ -8,10 +8,13 @@ const orderSchema = z.object({
   raffleId: z.string(),
   ticketNumbers: z.array(z.number()).min(1).max(20),
   buyerName: z.string().min(2),
-  buyerEmail: z.string().email(),
-  buyerPhone: z.string().min(6),
+  buyerEmail: z.string().email().optional().or(z.literal('')),
+  buyerPhone: z.string().min(6).optional().or(z.literal('')),
   paymentMethod: z.enum(['MERCADOPAGO', 'WHATSAPP', 'TRANSFER']),
-})
+}).refine(
+  (d) => (d.buyerEmail && d.buyerEmail.length > 0) || (d.buyerPhone && d.buyerPhone.length > 0),
+  { message: 'Se requiere al menos un email o teléfono', path: ['buyerEmail'] }
+)
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,8 +56,8 @@ export async function POST(req: NextRequest) {
         data: {
           raffleId,
           buyerName,
-          buyerEmail,
-          buyerPhone,
+          buyerEmail: buyerEmail || '',
+          buyerPhone: buyerPhone || '',
           totalAmount,
           paymentMethod,
           expiresAt,
@@ -76,13 +79,18 @@ export async function POST(req: NextRequest) {
     })
 
     if (paymentMethod === 'MERCADOPAGO') {
+      // MP requiere un email válido; si el usuario no lo ingresó usamos el teléfono como fallback
+      const mpEmail = (buyerEmail && buyerEmail.length > 0)
+        ? buyerEmail
+        : `${(buyerPhone || 'sin-email').replace(/\s+/g, '')}@comprador.rifar.app`
+
       const preference = await createPreference({
         orderId: order.id,
         raffleTitle: raffle.title,
         ticketNumbers,
         unitPrice: raffle.ticketPrice,
         quantity: ticketNumbers.length,
-        buyerEmail,
+        buyerEmail: mpEmail,
       })
 
       await prisma.order.update({
@@ -99,7 +107,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ orderId: order.id })
   } catch (err) {
-    console.error('[orders] unhandled error:', err)
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('[orders] unhandled error:', message)
+    return NextResponse.json({ error: 'Error interno del servidor', detail: message }, { status: 500 })
   }
 }
