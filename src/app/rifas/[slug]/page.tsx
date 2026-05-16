@@ -25,7 +25,7 @@ async function getRaffle(slug: string) {
   if (!raffle) return null
 
   // Liberar reservas vencidas antes de mostrar disponibilidad
-  await releaseExpiredReservations(raffle.id)
+  await releaseExpiredReservations(raffle.id).catch(() => null)
 
   const [soldCount, reservedCount, participantCount] = await Promise.all([
     prisma.ticket.count({ where: { raffleId: raffle.id, status: 'SOLD' } }),
