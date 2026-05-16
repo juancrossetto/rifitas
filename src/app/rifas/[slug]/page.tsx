@@ -1,6 +1,7 @@
 import React from 'react'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { releaseExpiredReservations } from '@/lib/reservations'
 import { BuyForm } from '@/components/public/BuyForm'
 import { StatusChip } from '@/components/ui/StatusChip'
 import { RaffleGallery } from '@/components/public/RaffleGallery'
@@ -22,6 +23,9 @@ async function getRaffle(slug: string) {
     include: { tickets: { orderBy: { number: 'asc' } } },
   })
   if (!raffle) return null
+
+  // Liberar reservas vencidas antes de mostrar disponibilidad
+  await releaseExpiredReservations(raffle.id)
 
   const [soldCount, reservedCount, participantCount] = await Promise.all([
     prisma.ticket.count({ where: { raffleId: raffle.id, status: 'SOLD' } }),

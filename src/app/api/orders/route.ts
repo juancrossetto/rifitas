@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createPreference } from '@/lib/mercadopago'
+import { releaseExpiredReservations } from '@/lib/reservations'
 import { z } from 'zod'
 
 const orderSchema = z.object({
@@ -25,6 +26,9 @@ export async function POST(req: NextRequest) {
   if (!raffle || raffle.status !== 'ACTIVE') {
     return NextResponse.json({ error: 'Rifa no disponible' }, { status: 400 })
   }
+
+  // Liberar reservas vencidas (no hay cron en Vercel, lo hacemos on-demand)
+  await releaseExpiredReservations(raffleId)
 
   // Verificar disponibilidad de números
   const existingTickets = await prisma.ticket.findMany({
